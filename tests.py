@@ -1,6 +1,6 @@
-from functions.get_file_content import get_file_content
+from functions.write_file import write_file
 
-print(get_file_content("calculator", "main.py"))                   # should include 'def main():'
-print(get_file_content("calculator", "pkg/calculator.py"))         # should include 'def _apply_operator(self, operators, values)'
-print(get_file_content("calculator", "/bin/cat"))                  # should start with 'Error:'
-print(get_file_content("calculator", "pkg/does_not_exist.py"))     # should start with 'Error:'
+
+print(write_file("calculator", "lorem.txt", "wait, this isn't lorem ipsum"))
+print(write_file("calculator", "pkg/morelorem.txt", "lorem ipsum dolor sit amet"))
+print(write_file("calculator", "/tmp/temp.txt", "this should not be allowed"))
