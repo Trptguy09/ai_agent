@@ -1,6 +1,7 @@
 # tests.py
 
 import unittest
+
 from pkg.calculator import Calculator
 
 
@@ -44,4 +45,10 @@ class TestCalculator(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.calculator.evaluate("+ 3")
 
-            from functions.get_files_info import get_files_info
+    # python
+
+
+if __name__ == "__main__":
+    import unittest
+
+    unittest.main(verbosity=2)
