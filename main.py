@@ -2,6 +2,7 @@ import os
 import sys
 
 from call_function import available_functions, call_function
+from config import MAX_ITERS
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -34,7 +35,20 @@ def main():
     messages = [
         types.Content(role="user", parts=[types.Part(text=user_prompt)]),
     ]
-    generate_content(client, messages, verbose)
+    iters = 0
+    while True:
+        iters += 1
+        if iters > MAX_ITERS:
+            print(f"Maximum iterations ({MAX_ITERS}) reached.")
+            sys.exit(1)
+        try:
+            final_response = generate_content(client, messages, verbose)
+            if final_response:
+                print("Final response:")
+                print(final_response)
+                break
+        except Exception as e:
+            print(f"Error in generate_content: {e}")
 
 
 def generate_content(client, messages, verbose):
@@ -45,29 +59,24 @@ def generate_content(client, messages, verbose):
             tools=[available_functions], system_instruction=system_prompt
         ),
     )
+    if verbose:
+        print("Prompt tokens:", response.usage_metadata.prompt_token_count)
+        print("Response tokens:", response.usage_metadata.candidates_token_count)
 
-    if not getattr(response, "function_calls", None):
-        if verbose and getattr(response, "text", None):
-            print(response.text)
-        return
+    if not response.function_calls:
+        return response.text
 
     function_responses = []
-
     for function_call_part in response.function_calls:
-        result_content = call_function(function_call_part, verbose)
-
-        if not result_content.parts or not result_content.parts[0].function_response:
+        function_call_result = call_function(function_call_part, verbose)
+        if (
+            not function_call_result.parts
+            or not function_call_result.parts[0].function_response
+        ):
             raise Exception("empty function call result")
-
-    # python
-    fr = result_content.parts[0].function_response
-    resp = fr.response or {}
-    if verbose:
-        print(f"DEBUG resp: {resp!r}")
-    out = resp.get("result") or resp.get("error") or ""
-    if verbose and out:
-        print(f"-> {out}")
-    function_responses.append(result_content.parts[0])
+        if verbose:
+            print(f"-> {function_call_result.parts[0].function_response.response}")
+        function_responses.append(function_call_result.parts[0])
 
     if not function_responses:
         raise Exception("no function responses generated, exiting.")
